@@ -1,0 +1,5 @@
+{
+  "name": "Oniromancy AI",
+  "description": "A mystical SaaS that visualizes and interprets your dreams using Gemini and Imagen. Generates shareable 'Dream Cards' for social media.",
+  "requestFramePermissions": []
+}
