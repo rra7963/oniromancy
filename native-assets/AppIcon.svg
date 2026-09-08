@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <defs>
+    <radialGradient id="background" cx="50%" cy="35%" r="75%">
+      <stop offset="0%" stop-color="#24113f"/>
+      <stop offset="55%" stop-color="#0b0611"/>
+      <stop offset="100%" stop-color="#050208"/>
+    </radialGradient>
+    <linearGradient id="gold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fcd34d"/>
+      <stop offset="52%" stop-color="#d4af37"/>
+      <stop offset="100%" stop-color="#92400e"/>
+    </linearGradient>
+    <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="18" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <rect width="1024" height="1024" fill="url(#background)"/>
+  <g transform="translate(512 512)" filter="url(#glow)">
+    <circle r="326" fill="none" stroke="url(#gold)" stroke-width="24" opacity=".88"/>
+    <circle r="270" fill="url(#gold)"/>
+    <circle cx="58" cy="-58" r="252" fill="#08040d"/>
+    <path d="M0-390 L12-350 L52-338 L12-326 L0-286 L-12-326 L-52-338 L-12-350Z" fill="#f9e8a6"/>
+  </g>
+</svg>
