@@ -1,0 +1,3 @@
+// Single source of truth for the native target bundle identifier.
+// Keep this value aligned with IOS_BUNDLE_ID in capacitor.config.ts.
+ONIROMANCY_BUNDLE_ID = com.oniromancy.app
