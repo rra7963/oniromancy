@@ -7,6 +7,8 @@ export type AnalyticsEvent =
   | 'draw_tarot'
   | 'view_horoscope'
   | 'draw_horoscope'
+  | 'view_divination'
+  | 'cast_divination'
   | 'begin_checkout'
   | 'purchase'
   | 'login'

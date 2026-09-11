@@ -133,6 +133,24 @@ export const Footer: React.FC = () => {
                   Dreams
                 </Link>
               </li>
+              {[
+                { href: "/divination", label: "All Divination" },
+                { href: "/bazi", label: "BaZi" },
+                { href: "/i-ching", label: "I Ching" },
+                { href: "/name-analysis", label: "Name Reading" },
+                { href: "/name-generator", label: "Name Generator" },
+                { href: "/love-match", label: "Love Match" },
+              ].map((item) => (
+                <li key={item.href}>
+                  <Link
+                    href={item.href}
+                    className="text-slate-400 hover:text-mystic-gold transition-colors text-sm flex items-center gap-2"
+                  >
+                    <span className="w-1 h-1 rounded-full bg-white/20 shrink-0"></span>
+                    {item.label}
+                  </Link>
+                </li>
+              ))}
               <li>
                 <Link
                   href="/history"

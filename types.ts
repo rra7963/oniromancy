@@ -40,6 +40,12 @@ export const CREDIT_COSTS = {
   TAROT_SPREAD_3: 5,
   HOROSCOPE: 1,
   IMAGE_GENERATION: 5, // Included in Dream Analysis usually, but could be separate
+  // Ported divination types (chatgpt-tarot-divination)
+  BAZI: 4,
+  NAME_ANALYSIS: 2,
+  NAME_GENERATOR: 4,
+  I_CHING: 2,
+  LOVE_MATCH: 1,
 } as const;
 
 export const REFERRAL_BONUS = 20;
@@ -112,7 +118,22 @@ export interface User {
   notificationOptIn?: boolean;
 }
 
-export type TransactionType = 'PURCHASE' | 'SUBSCRIPTION' | 'SUBSCRIPTION_RENEWAL' | 'BONUS' | 'SPEND_DREAM' | 'SPEND_TAROT' | 'SPEND_HOROSCOPE' | 'REFUND' | 'REFERRAL_REWARD' | 'OTHER';
+export interface DivinationReading {
+  id: string;
+  userId: string;
+  /** One of the DivinationType values in lib/divination.ts */
+  type: string;
+  /** The raw form values the reading was cast from. */
+  input: Record<string, string>;
+  /** Deterministic chart data (pillars, hexagram, …) when the type has one. */
+  chart?: Record<string, unknown> | null;
+  /** Markdown interpretation. */
+  content: string;
+  date: string;
+  timestamp: number;
+}
+
+export type TransactionType = 'PURCHASE' | 'SUBSCRIPTION' | 'SUBSCRIPTION_RENEWAL' | 'BONUS' | 'SPEND_DREAM' | 'SPEND_TAROT' | 'SPEND_HOROSCOPE' | 'SPEND_DIVINATION' | 'REFUND' | 'REFERRAL_REWARD' | 'OTHER';
 
 export interface Transaction {
   id: string;
