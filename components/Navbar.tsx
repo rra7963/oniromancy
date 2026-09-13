@@ -7,7 +7,7 @@ import { useApp } from "../contexts/AppContext";
 import { SubscriptionTier } from "../types";
 import { signOutAction } from "../app/auth/actions";
 import { trackEvent } from "../services/analytics";
-import { Sparkles, History, Crown, LogOut, User as UserIcon, Moon, Sun, Coins, Menu, X, LucideIcon, Star, Gem, BookOpen } from "lucide-react";
+import { Sparkles, History, Crown, LogOut, User as UserIcon, Moon, Sun, Coins, Menu, X, LucideIcon, Star, Gem, BookOpen, Compass } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import clsx from "clsx";
 
@@ -97,6 +97,12 @@ export const Navbar = () => {
                   to="/tarot"
                   icon={Sun}
                   label="Tarot"
+                  pathname={pathname}
+                />
+                <NavItem
+                  to="/divination"
+                  icon={Compass}
+                  label="Divination"
                   pathname={pathname}
                 />
                 <NavItem
@@ -292,6 +298,14 @@ export const Navbar = () => {
                   >
                     <Sun className="w-6 h-6 text-amber-300 mb-2" />
                     <span className="text-sm text-slate-300">Tarot</span>
+                  </Link>
+                  <Link
+                    href="/divination"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="flex flex-col items-center justify-center p-4 bg-white/5 rounded-xl border border-white/5 hover:bg-white/10"
+                  >
+                    <Compass className="w-6 h-6 text-violet-300 mb-2" />
+                    <span className="text-sm text-slate-300">Divination</span>
                   </Link>
                   <Link
                     href="/history"
