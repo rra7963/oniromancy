@@ -4,6 +4,12 @@ Oniromancy is a mystical AI-powered application for dream interpretation, tarot 
 
 ## ✨ Features
 
+### 🕯 The Opening Rite
+- **Narrated Intro Scene**: A moderator-led night scene (in the spirit of a social-deduction night phase) plays before the dream is spoken — the Oracle narrates, the dreamer answers.
+- **Four Watches**: Each watch asks one question with 2–4 choices (how you woke, whether the dream recurs, who else was in it, what you want named).
+- **Your Seat**: The answers decide which seat you take for the night — The Seer, The Witch, The Hunter, The Warden, or The Wanderer.
+- **Feeds the Reading**: The rite's answers are rebuilt server-side and sent with the dream, so the interpretation is grounded in what you said. Skippable, and remembered for 12 hours.
+
 ### 🌙 Dream Analysis
 - **AI Interpretation**: Decode your dreams using Jungian psychology and mystical symbolism.
 - **Visual Generation**: Creates unique, surreal visualizations of your dreamscapes using Google Imagen.

@@ -3,6 +3,7 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { DreamAnalysis, DreamResult, CREDIT_COSTS } from "../../types";
 import { createClient } from "@/services/supabase/server";
+import { RitualAnswer, buildRitualBriefing } from "@/lib/dream-ritual";
 import { supabaseAdmin } from "@/services/supabase/admin";
 
 const getAI = () => {
@@ -21,7 +22,10 @@ const getAI = () => {
 };
 
 // Internal helper for AI analysis
-async function runGeminiAnalysis(dreamText: string): Promise<DreamAnalysis> {
+async function runGeminiAnalysis(
+  dreamText: string,
+  ritualBriefing: string
+): Promise<DreamAnalysis> {
     const ai = getAI();
     const response = await ai.models.generateContent({
       model: "gemini-2.5-flash-lite",
@@ -39,7 +43,8 @@ async function runGeminiAnalysis(dreamText: string): Promise<DreamAnalysis> {
       - luckyNumber: Integer 0-99.
       - element: One of 'Fire', 'Water', 'Air', 'Earth', 'Ether' that best fits the dream energy.
       
-      Dream: "${dreamText}"`,
+      Dream: "${dreamText}"
+      ${ritualBriefing}`,
       config: {
         responseMimeType: "application/json",
         responseSchema: {
@@ -127,7 +132,10 @@ async function runGeminiImage(dreamText: string, analysis: DreamAnalysis): Promi
 /**
  * SECURE ACTION: Analyzes dream, deducts credits, saves to DB.
  */
-export const analyzeDreamAction = async (dreamText: string): Promise<DreamResult> => {
+export const analyzeDreamAction = async (
+    dreamText: string,
+    ritualAnswers?: RitualAnswer[]
+): Promise<DreamResult> => {
     // 1. Validation
     if (!dreamText || dreamText.trim().length < 5) throw new Error("Dream text too short");
     if (dreamText.length > 5000) throw new Error("Dream text too long");
@@ -204,7 +212,12 @@ export const analyzeDreamAction = async (dreamText: string): Promise<DreamResult
 
     try {
         // 4. Run Analysis
-        const analysis = await runGeminiAnalysis(dreamText);
+        // The briefing is rebuilt server-side from the rite's own table, so the
+        // client can only choose between known answers - never inject text.
+        const analysis = await runGeminiAnalysis(
+            dreamText,
+            buildRitualBriefing(ritualAnswers)
+        );
         
         // 5. Create Dream Record (without image initially)
         const dreamId = crypto.randomUUID();

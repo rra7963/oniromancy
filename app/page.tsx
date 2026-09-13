@@ -12,6 +12,7 @@ import {
   CREDIT_COSTS,
 } from "../types";
 import { useApp } from "../contexts/AppContext";
+import { RitualAnswer } from "../lib/dream-ritual";
 import { analyzeDreamAction, visualizeDreamAction } from "./actions/dream";
 import { trackEvent } from "../services/analytics";
 import { softwareAppJsonLd } from "./json-ld";
@@ -104,7 +105,10 @@ function HomeContent() {
     loadingStage !== LoadingStage.COMPLETE &&
     loadingStage !== LoadingStage.ERROR;
 
-  const handleDreamSubmit = async (dreamText: string) => {
+  const handleDreamSubmit = async (
+    dreamText: string,
+    ritualAnswers: RitualAnswer[] = []
+  ) => {
     // Immediate scroll attempt
     window.scrollTo({ top: 0, behavior: 'instant' });
     
@@ -121,7 +125,10 @@ function HomeContent() {
       return;
     }
 
-    trackEvent('analyze_dream', { length: dreamText.length });
+    trackEvent('analyze_dream', {
+      length: dreamText.length,
+      ritual_answers: ritualAnswers.length,
+    });
     setError(null);
     setLoadingStage(LoadingStage.INTERPRETING);
     setCurrentResult(null);
@@ -135,7 +142,7 @@ function HomeContent() {
 
     try {
       // 1. Analyze (Server deducts credits & saves to DB)
-      const resultWithoutImage = await analyzeDreamAction(dreamText);
+      const resultWithoutImage = await analyzeDreamAction(dreamText, ritualAnswers);
 
       // Optimistically update local user credits
       setUser({ ...user, credits: Math.max(0, user.credits - COST) });

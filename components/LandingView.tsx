@@ -1,9 +1,12 @@
-import React from "react";
+"use client";
+
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import { Moon, Sun, Sparkles, History, ArrowRight, Star, Hexagon, Compass, ScrollText, Brain, Heart, Globe, Wind, Calendar, Clock, User as UserIcon } from "lucide-react";
 import { DreamInput } from "./DreamInput";
+import { DreamRitual } from "./DreamRitual";
 import { DreamCard } from "./DreamCard";
 import { LoadingState } from "./LoadingState";
 import { DreamResult, LoadingStage, User } from "../types";
@@ -11,13 +14,20 @@ import { blogPosts } from "../app/blog/data";
 import { symbols } from "../app/symbolism-guide/data";
 import { slugify } from "@/lib/utils";
 import { trackEvent } from "../services/analytics";
+import {
+  RitualAnswer,
+  clearRite,
+  deriveSeat,
+  loadRite,
+  saveRite,
+} from "../lib/dream-ritual";
 
 interface LandingViewProps {
   user: User | null;
   isGenerating: boolean;
   loadingStage: LoadingStage;
   currentResult: DreamResult | null;
-  onDreamSubmit: (text: string) => void;
+  onDreamSubmit: (text: string, ritualAnswers: RitualAnswer[]) => void;
   onResetResult: () => void;
 }
 
@@ -31,6 +41,60 @@ export const LandingView: React.FC<LandingViewProps> = ({
   onDreamSubmit,
   onResetResult,
 }) => {
+  // "checking" avoids a flash of the wrong card while we look for tonight's rite.
+  const [riteStatus, setRiteStatus] = useState<"checking" | "playing" | "done">(
+    "checking"
+  );
+  const [ritualAnswers, setRitualAnswers] = useState<RitualAnswer[]>([]);
+
+  useEffect(() => {
+    // Deferred off the effect body so the first paint matches the server HTML
+    // (localStorage does not exist there) instead of cascading a re-render.
+    let cancelled = false;
+    queueMicrotask(() => {
+      if (cancelled) return;
+      const stored = loadRite();
+      if (stored) {
+        setRitualAnswers(stored.answers);
+        setRiteStatus("done");
+        return;
+      }
+      setRiteStatus("playing");
+      trackEvent("ritual_start", { source: "first_visit" });
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const isRiteOpen = riteStatus === "playing";
+
+  const handleRiteComplete = (answers: RitualAnswer[]) => {
+    saveRite(answers);
+    setRitualAnswers(answers);
+    setRiteStatus("done");
+    trackEvent("ritual_complete", {
+      seat: deriveSeat(answers).id,
+      answers: answers.length,
+    });
+  };
+
+  // Walking out early still keeps whatever was answered - those answers are
+  // just as usable as a finished rite's.
+  const handleRiteSkip = (answered: RitualAnswer[]) => {
+    saveRite(answered, true);
+    setRitualAnswers(answered);
+    setRiteStatus("done");
+    trackEvent("ritual_skip", { answered: answered.length });
+  };
+
+  const handleRiteReplay = () => {
+    clearRite();
+    setRitualAnswers([]);
+    setRiteStatus("playing");
+    trackEvent("ritual_start", { source: "replay" });
+  };
+
   if (loadingStage === LoadingStage.COMPLETE && currentResult) {
     return <DreamCard result={currentResult} onReset={onResetResult} />;
   }
@@ -42,29 +106,44 @@ export const LandingView: React.FC<LandingViewProps> = ({
   return (
     <div className="w-full flex flex-col items-center gap-32 pb-20">
       {/* Hero Section */}
-      <section className="w-full flex flex-col items-center text-center max-w-5xl px-4 mt-12">
+      <section
+        className={`w-full flex flex-col items-center text-center max-w-5xl px-4 ${
+          isRiteOpen ? "mt-6" : "mt-12"
+        }`}
+      >
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, ease: "easeOut" }}
-          className="mb-16"
+          className={isRiteOpen ? "mb-8" : "mb-16"}
         >
           <div className="inline-block mb-4 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 backdrop-blur-md text-xs font-bold uppercase tracking-[0.2em] text-mystic-gold animate-fade-in">
             The Oracle
           </div>
-          <h1 className="text-4xl md:text-8xl font-display font-bold text-white mb-8 tracking-tight drop-shadow-2xl leading-tight">
+          <h1
+            className={`font-display font-bold text-white tracking-tight drop-shadow-2xl leading-tight ${
+              isRiteOpen
+                ? "text-3xl md:text-6xl mb-4"
+                : "text-4xl md:text-8xl mb-8"
+            }`}
+          >
             Unlock the <br />
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-200 via-mystic-gold to-purple-200 animate-gradient-x">
               Unseen World
             </span>
           </h1>
-          <p className="text-lg md:text-2xl text-slate-300 max-w-3xl mx-auto leading-relaxed font-serif opacity-90">
+          <p
+            className={`text-slate-300 max-w-3xl mx-auto leading-relaxed font-serif opacity-90 ${
+              isRiteOpen ? "text-base md:text-lg" : "text-lg md:text-2xl"
+            }`}
+          >
             Where ancient wisdom meets artificial intelligence.{" "}
             <br className="hidden md:block" />
             Interpret dreams, consult the stars, and unveil your destiny.
           </p>
 
-          {!user && (
+          {/* The hero CTAs step aside while the Oracle is speaking. */}
+          {!user && !isRiteOpen && (
             <div className="mt-12 flex flex-col sm:flex-row gap-6 justify-center items-center">
               <Link
                 href="/auth"
@@ -87,11 +166,30 @@ export const LandingView: React.FC<LandingViewProps> = ({
 
         <div className="w-full max-w-2xl relative z-10">
           <div className="absolute inset-0 bg-purple-500/20 blur-3xl rounded-full -z-10"></div>
-          <DreamInput
-            onSubmit={onDreamSubmit}
-            isProcessing={isGenerating}
-            user={user}
-          />
+          {riteStatus === "checking" && (
+            <div className="h-[420px] md:h-[520px]" aria-hidden="true" />
+          )}
+          {riteStatus === "playing" && (
+            <DreamRitual
+              onComplete={handleRiteComplete}
+              onSkip={handleRiteSkip}
+              onAnswer={(answer) =>
+                trackEvent("ritual_answer", {
+                  step: answer.stepId,
+                  choice: answer.choiceId,
+                })
+              }
+            />
+          )}
+          {riteStatus === "done" && (
+            <DreamInput
+              onSubmit={(text) => onDreamSubmit(text, ritualAnswers)}
+              isProcessing={isGenerating}
+              user={user}
+              ritualAnswers={ritualAnswers}
+              onReplayRitual={handleRiteReplay}
+            />
+          )}
         </div>
       </section>
 

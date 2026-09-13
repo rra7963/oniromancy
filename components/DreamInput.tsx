@@ -1,13 +1,17 @@
 
 import React, { useState } from 'react';
-import { Sparkles, Moon, Zap, Coins, Crown } from 'lucide-react';
+import { Sparkles, Moon, Zap, Coins, Crown, Flame, RotateCcw } from 'lucide-react';
 import { User, SubscriptionTier, CREDIT_COSTS } from '../types';
 import { nativeHaptics } from '../lib/native/haptics';
+import { RitualAnswer, describeRite } from '../lib/dream-ritual';
 
 interface DreamInputProps {
   onSubmit: (text: string) => void;
   isProcessing: boolean;
   user: User | null;
+  /** Answers given during the opening rite; empty when it was skipped. */
+  ritualAnswers?: RitualAnswer[];
+  onReplayRitual?: () => void;
 }
 
 const PRESETS = [
@@ -18,8 +22,16 @@ const PRESETS = [
   "I was lost in a labyrinth of mirrors in a snowy forest; my reflection stepped out of the glass and handed me a lantern that glowed with a heartbeat."
 ];
 
-export const DreamInput: React.FC<DreamInputProps> = ({ onSubmit, isProcessing, user }) => {
+export const DreamInput: React.FC<DreamInputProps> = ({
+  onSubmit,
+  isProcessing,
+  user,
+  ritualAnswers = [],
+  onReplayRitual,
+}) => {
   const [text, setText] = useState('');
+  const rite = describeRite(ritualAnswers);
+  const hasRite = rite.chips.length > 0;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -70,6 +82,53 @@ export const DreamInput: React.FC<DreamInputProps> = ({ onSubmit, isProcessing, 
             &quot;What visions haunted your slumber?&quot;
           </p>
         </div>
+
+        {/* What the opening rite recorded — folded into the reading */}
+        {(hasRite || onReplayRitual) && (
+          <div className="mb-6 rounded-xl border border-white/10 bg-black/20 px-4 py-3">
+            <div className="flex items-center justify-between gap-3 flex-wrap">
+              <div className="flex items-center gap-2 min-w-0">
+                <Flame className="w-3.5 h-3.5 text-mystic-gold shrink-0" />
+                <span className="text-[10px] uppercase tracking-[0.2em] text-slate-400">
+                  {hasRite ? (
+                    <>
+                      Seated as{' '}
+                      <span className="text-mystic-gold font-bold">
+                        {rite.seat.name}
+                      </span>
+                    </>
+                  ) : (
+                    'The rite was skipped'
+                  )}
+                </span>
+              </div>
+              {onReplayRitual && (
+                <button
+                  type="button"
+                  onClick={onReplayRitual}
+                  disabled={isProcessing}
+                  className="text-xs flex items-center gap-1 text-slate-500 hover:text-purple-300 transition-colors disabled:opacity-40"
+                >
+                  <RotateCcw className="w-3 h-3" />
+                  {hasRite ? 'Sit again' : 'Sit with the Oracle'}
+                </button>
+              )}
+            </div>
+
+            {hasRite && (
+              <div className="flex flex-wrap gap-1.5 mt-2.5">
+                {rite.chips.map((chip) => (
+                  <span
+                    key={chip}
+                    className="text-[11px] text-slate-300 bg-white/5 border border-white/10 rounded-full px-2.5 py-1"
+                  >
+                    {chip}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="relative group">
