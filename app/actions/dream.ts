@@ -1,14 +1,14 @@
 "use server";
 
-import { GoogleGenAI, Type } from "@google/genai";
+import { GoogleGenAI, Type } from "@/services/ai";
 import { DreamAnalysis, DreamResult, CREDIT_COSTS } from "../../types";
 import { createClient } from "@/services/supabase/server";
 import { supabaseAdmin } from "@/services/supabase/admin";
 
 const getAI = () => {
-  const apiKey = process.env.GEMINI_API_KEY;
+  const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
-    throw new Error("GEMINI_API_KEY is not set. Please add it to your .env.local file.");
+    throw new Error("OPENAI_API_KEY is not set. Please add it to your .env.local file.");
   }
   return new GoogleGenAI({ 
     apiKey,
@@ -24,7 +24,7 @@ const getAI = () => {
 async function runGeminiAnalysis(dreamText: string): Promise<DreamAnalysis> {
     const ai = getAI();
     const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash-lite",
+      model: process.env.OPENAI_MODEL || "gpt-4o-mini",
       contents: `You are an ancient Oneiromancer and Jungian psychologist. 
       Analyze the following dream.
       
@@ -105,7 +105,7 @@ async function runGeminiImage(dreamText: string, analysis: DreamAnalysis): Promi
       `Quality: high contrast, mystical, grain, cinematic 8k resolution, oil painting texture, vertical composition, intricate details.`;
 
     const imageResponse = await ai.models.generateImages({
-      model: "imagen-4.0-generate-001", // Fast model
+      model: process.env.OPENAI_IMAGE_MODEL || "gpt-image-1",
       prompt: refinedPrompt,
       config: {
         numberOfImages: 1,

@@ -1,15 +1,15 @@
 "use server";
 
-import { GoogleGenAI, Type } from "@google/genai";
+import { GoogleGenAI, Type } from "@/services/ai";
 import { DailyFortune, CREDIT_COSTS } from "../../types";
 import { createClient } from "../../services/supabase/server";
 import { supabaseAdmin } from "../../services/supabase/admin";
 import { uuid, todayKey } from "../../utils";
 
 const getAI = () => {
-  const apiKey = process.env.GEMINI_API_KEY;
+  const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
-    throw new Error("GEMINI_API_KEY is not set. Please add it to your .env.local file.");
+    throw new Error("OPENAI_API_KEY is not set. Please add it to your .env.local file.");
   }
   return new GoogleGenAI({ 
     apiKey,
@@ -120,7 +120,7 @@ export const generateDailyFortuneAction = async (isRecast: boolean = false): Pro
     }
         
     const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash-lite",
+      model: process.env.OPENAI_MODEL || "gpt-4o-mini",
       contents,
       config: {
         responseMimeType: "application/json",
@@ -196,7 +196,7 @@ export const generateDailyFortuneAction = async (isRecast: boolean = false): Pro
     return fortune;
 
   } catch (error: unknown) {
-    console.error("Gemini API Error (generateDailyFortune):", error);
+    console.error("AI API Error (generateDailyFortune):", error);
     // Refund
     for (let attempt = 0; attempt < 2; attempt++) {
       const { data: currentProfile } = await supabaseAdmin

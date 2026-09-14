@@ -1,6 +1,6 @@
 "use server";
 
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenAI } from "@/services/ai";
 import { TarotDraw, CREDIT_COSTS, TarotCardPick } from "../../types";
 import { createClient } from "../../services/supabase/server";
 import { supabaseAdmin } from "../../services/supabase/admin";
@@ -33,9 +33,9 @@ const MAJOR_ARCANA = [
 ];
 
 const getAI = () => {
-  const apiKey = process.env.GEMINI_API_KEY;
+  const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
-    throw new Error("GEMINI_API_KEY is not set. Please add it to your .env.local file.");
+    throw new Error("OPENAI_API_KEY is not set. Please add it to your .env.local file.");
   }
   return new GoogleGenAI({ 
     apiKey,
@@ -197,7 +197,7 @@ Provide the reading in Markdown using this structure:
     // 6. Generate Interpretation
     const ai = getAI();
     const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash-lite",
+      model: process.env.OPENAI_MODEL || "gpt-4o-mini",
       contents: prompt,
     });
     
@@ -239,7 +239,7 @@ Provide the reading in Markdown using this structure:
     return draw;
 
   } catch (error: unknown) {
-    console.error("Gemini API Error (performTarotDraw):", error);
+    console.error("AI API Error (performTarotDraw):", error);
     // Refund credits
     for (let attempt = 0; attempt < 2; attempt++) {
       const { data: currentProfile } = await supabaseAdmin

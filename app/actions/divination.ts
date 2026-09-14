@@ -1,6 +1,6 @@
 "use server";
 
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenAI } from "@/services/ai";
 import { DivinationReading } from "../../types";
 import { createClient } from "../../services/supabase/server";
 import { supabaseAdmin } from "../../services/supabase/admin";
@@ -15,9 +15,9 @@ import { castBaziChart, parseBirthMoment } from "../../lib/bazi";
 import { castHexagram } from "../../lib/iching";
 
 const getAI = () => {
-  const apiKey = process.env.GEMINI_API_KEY;
+  const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
-    throw new Error("GEMINI_API_KEY is not set. Please add it to your .env.local file.");
+    throw new Error("OPENAI_API_KEY is not set. Please add it to your .env.local file.");
   }
   return new GoogleGenAI({
     apiKey,
@@ -314,7 +314,7 @@ export const performDivinationAction = async (
     // 4. Generate the interpretation
     const ai = getAI();
     const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash-lite",
+      model: process.env.OPENAI_MODEL || "gpt-4o-mini",
       contents: built.prompt,
     });
 
@@ -350,7 +350,7 @@ export const performDivinationAction = async (
 
     return reading;
   } catch (error: unknown) {
-    console.error("Gemini API Error (performDivination):", error);
+    console.error("AI API Error (performDivination):", error);
     // Refund
     for (let attempt = 0; attempt < 2; attempt++) {
       const { data: currentProfile } = await supabaseAdmin
