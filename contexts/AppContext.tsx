@@ -14,10 +14,26 @@ interface AppContextType {
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
+/**
+ * Local development bypass — pairs with DEV_SKIP_AUTH on the server
+ * (see services/supabase/devStub.ts). The UI gates on `user` before it ever
+ * calls a server action, so without a session here every feature bounces to
+ * /auth and the action never runs.
+ */
+const DEV_SKIP_AUTH = process.env.NEXT_PUBLIC_DEV_SKIP_AUTH === "true";
+
+const DEV_USER: User = {
+  id: "00000000-0000-4000-8000-000000000001",
+  email: "dev@localhost",
+  name: "Local Traveler",
+  tier: SubscriptionTier.PRO,
+  credits: 9999,
+};
+
 export const AppProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const loadingRef = React.useRef(true);
+  const [user, setUser] = useState<User | null>(DEV_SKIP_AUTH ? DEV_USER : null);
+  const [isLoading, setIsLoading] = useState(!DEV_SKIP_AUTH);
+  const loadingRef = React.useRef(!DEV_SKIP_AUTH);
 
   useEffect(() => {
     if (typeof document === "undefined") return;
@@ -50,6 +66,9 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
   }, [isLoading]);
 
   useEffect(() => {
+    // The stub user above already stands in for a session.
+    if (DEV_SKIP_AUTH) return;
+
     let mounted = true;
 
     // Safety timeout - extended to 10s to avoid false positives on slow connections

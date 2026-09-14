@@ -1,5 +1,6 @@
 import { createBrowserClient } from '@supabase/ssr';
 import { SupabaseClient } from '@supabase/supabase-js';
+import { DEV_SKIP_AUTH, createDevClient } from './devStub';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -8,6 +9,12 @@ let client: SupabaseClient | undefined;
 
 export const getSupabase = () => {
   if (client) return client;
+
+  // Local development only; see services/supabase/devStub.ts.
+  if (DEV_SKIP_AUTH) {
+    client = createDevClient();
+    return client;
+  }
 
   if (!supabaseUrl || !supabaseKey) {
     throw new Error('Supabase credentials are missing. Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY.');

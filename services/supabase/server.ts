@@ -1,7 +1,11 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
+import { DEV_SKIP_AUTH, createDevClient } from "./devStub";
 
 export async function createClient() {
+  // Local development only; see services/supabase/devStub.ts.
+  if (DEV_SKIP_AUTH) return createDevClient();
+
   const cookieStore = await cookies();
 
   return createServerClient(
